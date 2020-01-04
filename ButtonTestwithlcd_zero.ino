@@ -1,4 +1,3 @@
-
 #include "Arduino.h"
 #include "SamNonDuePin.h"
 #include "variant.h"
@@ -6,7 +5,7 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
-#define TEST1_CAN_TRANSFER_ID    0x000 //random 29 bits
+#define TEST1_CAN_TRANSFER_ID    0x7E1 //random 29 bits
 #define TEST1_CAN0_TX_PRIO       1
 #define CAN_MSG_DUMMY_DATA       0x00000000
 
@@ -14,7 +13,7 @@
 #define MAX_CAN_FRAME_DATA_LEN   8
 
 const int SPI_CS_PIN = 78; 
-MCP_CAN SW_CAN(SPI_CS_PIN);   // Set CS pin
+SWcan SW_CAN(SPI_CS_PIN);   // Set CS pin
 
 // Message variable to be send
 uint32_t CAN_MSG_1 = 0;
@@ -72,19 +71,19 @@ void setup() {
  //By default there are 7 mailboxes for each device that are RX boxes
   //This sets each mailbox to have an open filter that will accept standard frames
   //standard
-  Can0.setRXFilter(0, 0x000, 0x000, false); //set filter for mailbox 0 this is for rpm messeges
-  Can0.setRXFilter(1, 0x000, 0x000, false); //set filter for mailbox 1 this is for diag replies
+  Can0.setRXFilter(0, 0x1EF, 0x7ff, false); //set filter for mailbox 0 this is for rpm messeges
+  Can0.setRXFilter(1, 0x7E8, 0x7ff, false); //set filter for mailbox 1 this is for diag replies
   CAN.setCallback(1, displaylcd);           //set callback pointer for mailbox 1
 
 
  //start swcan and filters
- //SW_CAN.setupSW(0x00);
+ SW_CAN.setupSW(0x00);
   delay(100);
-  SW_CAN.init_Mask(0, 1, 0x00000000);                         // there are 2 mask in mcp2515, you need to set both of them
-  SW_CAN.init_Mask(1, 1, 0x00000000);
-  SW_CAN.init_Filt(0, 1, 0x00000000);                          // there are 6 filter in mcp2515
-  SW_CAN.init_Filt(1, 1, 0x00000000);                          // there are 6 filter in mcp2515
-  SW_CAN.setmode(3); // Go to normal mode. 0 - Sleep, 1 - High Speed, 2 - High Voltage Wake-Up, 3 - Normal
+  SW_CAN.init_Mask(0, 1, 0x1FFFFFFF);                         // there are 2 mask in mcp2515, you need to set both of them
+  SW_CAN.init_Mask(1, 1, 0x1FFFFFFF);
+  SW_CAN.init_Filt(0, 1, 0x10758040);                          // there are 6 filter in mcp2515
+  SW_CAN.init_Filt(1, 1, 0x10758040);                          // there are 6 filter in mcp2515
+  SW_CAN.mode(3); // Go to normal mode. 0 - Sleep, 1 - High Speed, 2 - High Voltage Wake-Up, 3 - Normal
    
 // start serial usb and serial3 (lcd)
   Serial3.begin(9600);  //lcd serial
@@ -95,7 +94,7 @@ void setup() {
 
 void displaylcd(CAN_FRAME *frame1)    // 
 {
-  if(frame1->data.bytes[3] == 00) //00  //cal SOC then send to display
+  if(frame1->data.bytes[3] == 91)//5B  //cal SOC then send to display
   {
   soc=frame1->data.bytes[4];
   soc=soc*100/255;
@@ -109,7 +108,7 @@ void displaylcd(CAN_FRAME *frame1)    //
     Serial3.write(0xff);
   }
   
-if(frame1->data.bytes[3] == 00)//00 //cal fuel then send to display
+if(frame1->data.bytes[3] == 47)//2F //cal fuel then send to display
   {
   fuel=frame1->data.bytes[4];
   fuel=fuel/255;
@@ -130,14 +129,14 @@ if(frame1->data.bytes[3] == 00)//00 //cal fuel then send to display
 void read() // send obd2 diag request data SOC
 {
  CAN_FRAME frame1;
- frame1.id = 0x000;
+ frame1.id = 0x7E0;
    frame1.length = 4;
    //Priority
    frame1.priority = 0;
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x5B002203;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -149,14 +148,14 @@ void read() // send obd2 diag request data SOC
 void read2() // send obd2 diag request data fuel
 {
  CAN_FRAME frame1;
- frame1.id = 0x000;
+ frame1.id = 0x7E0;
    frame1.length = 4;
    //Priority
    frame1.priority = 0;
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x2F002203;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -176,7 +175,7 @@ void keepalive()    //send keep alive for engine
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x00003E01;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -188,14 +187,14 @@ void keepalive()    //send keep alive for engine
 void keepalive2()         //send keep alive for body control module (daytime LED)
 {
  CAN_FRAME frame1;
- frame1.id = 0x000;
+ frame1.id = 0x241;
    frame1.length = MAX_CAN_FRAME_DATA_LEN;
    //Priority
    frame1.priority = 0;
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x00003E01;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -215,7 +214,7 @@ void on()             //send request to turn on engine
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x0631AE07;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -236,7 +235,7 @@ void off()          //send request to turn off engine
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x0531AE07;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -257,7 +256,7 @@ void stop()         //send request to release control of engine , disabled arm a
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0x0000AE02;
    frame1.data.high = CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
@@ -271,13 +270,14 @@ void stop()         //send request to release control of engine , disabled arm a
 
 
 void printFrame(CAN_FRAME &frame) {  //cal rpm data and send to display
-  if (frame.id == 000) //000
+  if (frame.id == 495) //1EF
   {
   rpm1 = (int) frame.data.bytes[2];
   rpm2 = (int) frame.data.bytes[3];
 
   rpm1 = rpm1*256;
   rpm0 = rpm1+rpm2/4;
+  rpm0 = rpm0+600;
   
   //send CAN Message to serial3 (LCD)
   Serial3.print("t1.txt=");
@@ -290,7 +290,7 @@ void printFrame(CAN_FRAME &frame) {  //cal rpm data and send to display
     Serial3.write(0xff);
   }
   
- // if (frame.id == 000) //000
+ // if (frame.id == 2024) //7E8
  // {
  // send CAN Message to serial3 (LCD)
  // Serial3.print("t0.txt=");
@@ -364,13 +364,13 @@ void loop() {
     wheeldata = (int) buf[1];
     unsigned int canId = SW_CAN.getCanId();
 
-    if(wheeldata == 000) //00     // if messege is button up
+    if(wheeldata == 104) //68     // if messege is button up
     {
        arm = 1;          //set arm status to enabled
       on();             // go to on routine
      }
    
-  if(wheeldata == 00) //00          // if messege is button down
+  if(wheeldata == 84)//54          // if messege is button down
     {
       arm = 1;         //set arm status to enabled
       off();          // go to off routine
@@ -392,15 +392,15 @@ void loop() {
   buttonState = digitalReadNonDue(SW1);
   if (buttonState == LOW) {  // KEY pressed turn on daytime LED
     CAN_FRAME frame1;
- frame1.id = 0x000;
+ frame1.id = 0x241;
    frame1.length = 8;
    //Priority
    frame1.priority = 0;
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
-   frame1.data.high =0x00000000;
+   frame1.data.low = 0xF00FAE07;
+   frame1.data.high =0x000000F0;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
    frame1.extended = 0;
@@ -413,14 +413,14 @@ void loop() {
   buttonState2 = digitalReadNonDue(SW2);
   if (buttonState2 == LOW) {     // KEY pressed turn off daytime LED
      CAN_FRAME frame1;
-    frame1.id = 0x000;
+    frame1.id = 0x241;
    frame1.length = 8;
    //Priority
    frame1.priority = 0;
    frame1.rtr = 1;
    //Below we set the 8 data bytes in 32 bit (4 byte) chunks
    //Bytes can be set individually with frame1.data.bytes[which] = something
-   frame1.data.low = 0x00000000;
+   frame1.data.low = 0xF00FAE07;
    frame1.data.high =CAN_MSG_DUMMY_DATA;
    //We are using extended frames so mark that here. Otherwise it will just use
    //the first 11 bits of the ID set
