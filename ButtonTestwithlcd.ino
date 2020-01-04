@@ -1,9 +1,15 @@
+/*
+  Demonstrates using "Non-Due" pins for Button inputs and LED outputs.
+  Also found here:
+  https://gist.github.com/macchina/d7b22db67d62e48583eb7530371e3c36
+*/
+
 #include "Arduino.h"
 #include "SamNonDuePin.h"
 #include "variant.h"
 #include <due_can.h>
-#include <mcp_can.h>
 #include <SPI.h>
+#include <sw_can.h>
 
 #define TEST1_CAN_TRANSFER_ID    0x7E1 //random 29 bits
 #define TEST1_CAN0_TX_PRIO       1
@@ -13,7 +19,7 @@
 #define MAX_CAN_FRAME_DATA_LEN   8
 
 const int SPI_CS_PIN = 78; 
-SWcan SW_CAN(SPI_CS_PIN);   // Set CS pin
+SWcan SW_CAN(SPI_CS_PIN);  // Set CS pin
 
 // Message variable to be send
 uint32_t CAN_MSG_1 = 0;
