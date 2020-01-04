@@ -1,3 +1,5 @@
+// for beta M2 boards only.
+
 #include "Arduino.h"
 #include "SamNonDuePin.h"
 #include "variant.h"
