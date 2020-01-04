@@ -1,9 +1,3 @@
-/*
-  Demonstrates using "Non-Due" pins for Button inputs and LED outputs.
-  Also found here:
-  https://gist.github.com/macchina/d7b22db67d62e48583eb7530371e3c36
-*/
-
 #include "Arduino.h"
 #include "SamNonDuePin.h"
 #include "variant.h"
