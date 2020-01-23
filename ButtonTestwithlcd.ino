@@ -1,4 +1,4 @@
-// for beta M2 boards only.
+// for M2 boards only. Copyright© 2020 Brian Batista @ MyVoltApp Inc. not authorized for redistribution or sale.
 
 #include "Arduino.h"
 #include "SamNonDuePin.h"
