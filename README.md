@@ -1,4 +1,4 @@
-# chevyvoltenginecontrol
+# chevy volt engine control arduino
 This arduino code is to control the Chevy Volts engine and DRLs with a Macchina M2 and NEXTION BASIC HMI DISPLAY.
 
 Video of code running and demo
